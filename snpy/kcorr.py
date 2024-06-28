@@ -702,7 +702,7 @@ def R_obs_abc(filter1, filter2, filter3, z, days, EBVhost, EBVgal,
       return(Rs[0])
 
 def A_obs(filter, z, days, EBVhost, EBVgal, Rv_host=3.1, Rv_gal=3.1, 
-      version='H3'):
+      version='H3', extrapolate=False):
    try:
       N = len(days)
       outarr = 1

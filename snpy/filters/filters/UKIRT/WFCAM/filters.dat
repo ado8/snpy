@@ -1,5 +1,10 @@
-WFCAMz   z_WFCAM.dat  VegaB=0.0   z filter on UKIRT's WFCAM
-WFCAMY   Y_WFCAM.dat  VegaB=0.0   Y filter on UKIRT's WFCAM
-WFCAMJ   J_WFCAM.dat  VegaB=0.0   J filter on UKIRT's WFCAM
-WFCAMH   H_WFCAM.dat  VegaB=0.0   H filter on UKIRT's WFCAM
-WFCAMK   K_WFCAM.dat  VegaB=0.0   K filter on UKIRT's WFCAM
+WFCAMZ   WFCAMZ_total.dat  VegaB=0.0   Z filter on UKIRT's WFCAM
+WFCAMY   WFCAMY_total.dat  VegaB=0.0   Y filter on UKIRT's WFCAM
+WFCAMJ   WFCAMJ_total.dat  VegaB=0.0   J filter on UKIRT's WFCAM
+WFCAMH   WFCAMH_total.dat  VegaB=0.0   H filter on UKIRT's WFCAM
+WFCAMK   WFCAMK_total.dat  VegaB=0.0   K filter on UKIRT's WFCAM
+WFCAMZ_filter   WFCAMZ_filter.dat  VegaB=0.0   z filter on UKIRT's WFCAM filter only
+WFCAMY_filter   WFCAMY_filter.dat  VegaB=0.0   Y filter on UKIRT's WFCAM filter only
+WFCAMJ_filter   WFCAMJ_filter.dat  VegaB=0.0   J filter on UKIRT's WFCAM filter only
+WFCAMH_filter   WFCAMH_filter.dat  VegaB=0.0   H filter on UKIRT's WFCAM filter only
+WFCAMK_filter   WFCAMK_filter.dat  VegaB=0.0   K filter on UKIRT's WFCAM filter only
