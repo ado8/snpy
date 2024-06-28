@@ -84,9 +84,10 @@ def dosetup():
             'pymysql',
             'matplotlib',
             'ipython',
-            'emcee',
-            'pymc',
-            'astropy'],
+            'astropy',
+            'certifi',
+            'pandas',
+            'scikit-learn'],
          **configuration(top_path='').todict())
 
 if __name__ == '__main__':
