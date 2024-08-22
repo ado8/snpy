@@ -161,7 +161,7 @@ class model:
             if band in self.MWRobs:
                 R = self.MWRobs[band]
             else:
-                self.MWRobs[band] = self.parent.data[band].filter.R(self.parent.Rv_gal)
+                self.MWRobs[band] = self.parent.data[band].filter.R(self.parent.Rv_gal, redlaw=self.parent.redlaw)
                 R = self.MWRobs[band]
         return R
 
@@ -238,6 +238,8 @@ class model:
 
         self.chisquare = sum(power(self.info["fvec"], 2))
         self.dof = len(self.info["fvec"]) - len(self._free)
+        # Removing epochs out of template, which have residuals of 0
+        self.dof = self.dof - sum(self.info['fvec'] == 0)
         if self.dof < 1:
             print("Warning!  less than 1 degree of freedom!")
             self.rchisquare = self.chisquare
@@ -326,6 +328,10 @@ class model:
                 msg = "All weights for filter %s are zero." % band
                 msg += " The fitter is in a part of parameter space where the model"
                 msg += " is not valid or there is no useful data."
+                if debug:
+                    msg += f"\nmodel={mod}"
+                    msg += f"\nerr={err}"
+                    msg += f"\nmask={mask}"
                 raise RuntimeError(msg)
             if self.model_in_mags:
                 f = power(10, -0.4 * (mod - self.parent.data[band].filter.zp))
@@ -838,7 +844,7 @@ class EBV_model2(model):
         self.do_Robs = 0
         self.Robs = {}
 
-    def setup(self, strict_ccm=False):
+    def setup(self):
         # check to see if we have more than one filter when solving for EBV
         if "EBVhost" not in self.args:
             if len(self._fbands) < 2:
@@ -860,7 +866,6 @@ class EBV_model2(model):
                 self.parent.Rv_gal,
                 self.parent.k_version,
                 redlaw=self.parent.redlaw,
-                strict_ccm=strict_ccm,
                 extrapolate=self.parent.k_extrapolate,
             )
 
@@ -891,7 +896,7 @@ class EBV_model2(model):
 
         return 0.0
 
-    def __call__(self, band, t, extrap=False, strict_ccm=False):
+    def __call__(self, band, t, extrap=False):
         self.template.mktemplate(self.parameters[self.stype])
         t = t - self.Tmax
         rband = self.parent.restbands[band]
@@ -900,7 +905,11 @@ class EBV_model2(model):
         temp, etemp, mask = self.template.eval(
             rband, t, self.parent.z, gen=self.gen, extrap=extrap
         )
+        if debug and not sometrue(mask):
+            print(f'self.template.eval({rband}, {t}, {self.parent.z}, gen={self.gen}, extrap={extrap}) gave mask\n{mask}')
         K, mask2 = self.kcorr(band, t)
+        if debug and not sometrue(mask2):
+            print(f'self.kcorr({band}, {t}) gave mask\n{mask2}')
         temp = temp + K
 
         # Apply reddening correction:
@@ -916,7 +925,6 @@ class EBV_model2(model):
                 self.parent.Rv_gal,
                 self.parent.k_version,
                 redlaw=self.parent.redlaw,
-                strict_ccm=strict_ccm,
                 extrapolate=self.parent.k_extrapolate,
             )
             temp = temp + self.Robs[band] * (self.EBVhost + self.parent.EBVgal)
@@ -1328,8 +1336,6 @@ class max_model(model):
     def systematics(self, calibration=1, include_Ho=False):
         """Returns the systematic errors in the paramters as a dictionary.  
       If no estimate is available, return None for that parameter."""
-        # AD 20230501: These do not seem to be from Folatelli 2010
-        # back channel?
         merrs = {
             "umax": 0.03,
             "gmax": 0.014,
@@ -1870,6 +1876,12 @@ class color_model(model):
                 "Calibration file not found: %s" % (self.calibration + ".pickle")
             )
         self.redlaw = self.args.get("redlaw", "ccm")
+        if self.redlaw not in ('ccm', 'fm', 'f99'):
+            raise ValueError(
+                "This model requires the ccm or f99 redlaw"
+                )
+        if self.redlaw == 'f99':
+            self.redlaw = 'fm'
         self.rvprior = self.args.get("rvprior", "uniform")
         f = open(cfile, "rb")
         if six.PY3:

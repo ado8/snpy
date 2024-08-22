@@ -8,14 +8,24 @@ if six.PY2:
    import urllib
 else:
    import urllib.request as urllib
-import re
 from xml.dom.minidom import parse
+from dustmaps.sfd import SFDQuery
+from astropy.coordinates import SkyCoord
+
 
 debug = 0
 
 BASE_URL = "http://irsa.ipac.caltech.edu/cgi-bin/DUST/nph-dust?locstr=%.5f+%.5f"
 
-def get_dust_RADEC(ra, dec, calibration="SF11"):
+sfd = SFDQuery()
+def get_dust_RADEC(ra, dec, calibration='SF11'):
+    ebv = sfd(SkyCoord(ra, dec, unit='deg'))
+    if calibration == 'SF11':
+        ebv = ebv * 0.86
+    return [ebv], [1]
+
+
+def old_get_dust_RADEC(ra, dec, calibration="SF11"):
    '''Query IRSA with given ra and dec to get the E(B-V).  To remain compatible
    with dust_getval module, return a list (dust_getval results an array).
    You can specify calibration of "SF11" or "SFD98"'''

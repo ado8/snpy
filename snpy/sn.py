@@ -200,6 +200,7 @@ class sn(object):
         # data
         self.k_version = "H3"
         self.k_extrapolate = False  # Extrapolate SED beyond the ends?
+        self.redlaw = "ccm"
 
     def __getattr__(self, name):
         if "data" in self.__dict__:
@@ -252,8 +253,6 @@ class sn(object):
         if name == "st":
             return None
 
-        if name == "redlaw":
-            return "ccm"
         raise AttributeError("Error:  attribute %s not defined" % (name))
 
     def __setattr__(self, name, value):
@@ -695,7 +694,7 @@ class sn(object):
                         else:
                             R = self.parent.Robs[band]
                     else:
-                        R = fset[band].R(wave=Ia_w, flux=Ia_f)
+                        R = fset[band].R(wave=Ia_w, flux=Ia_f, redlaw=self.redlaw)
                 else:
                     R = 0
 
@@ -766,6 +765,7 @@ class sn(object):
                             0.0,
                             version=self.k_version,
                             Scorr=True,
+                            redlaw=self.redlaw,
                         ),
                     )
                 )
@@ -971,6 +971,7 @@ class sn(object):
                             0.0,
                             version=self.k_version,
                             extrapolate=kextrap,
+                            redlaw=self.redlaw,
                         ),
                     )
                 )
@@ -1051,6 +1052,7 @@ class sn(object):
             version=self.k_version,
             full_output=1,
             extrapolate=kextrap,
+            redlaw=self.redlaw,
             **mopts
         )
         mask = greater(mask, 0)
@@ -1395,7 +1397,7 @@ class sn(object):
       member variables must be set beforehand.
       
       Args:
-         calibration (str):  Which MW extionction calibraiton ('SF11' or 
+         calibration (str):  Which MW extinction calibraiton ('SF11' or 
                              'SFD98')
 
       Returns:
@@ -2097,7 +2099,6 @@ class sn(object):
         k_stretch=True,
         margs={},
         kcorr=None,
-        strict_ccm=False,
         **args
     ):
         """Fit the N light curves with the currently set model (see 
@@ -2143,7 +2144,7 @@ class sn(object):
       """
 
         if self.model.external_fitter:
-            # We're going to skipp all stuff and just run the fitter and plot
+            # We're going to skip all stuff and just run the fitter and plot
             if bands is None:
                 bands = list(self.data.keys())
             self.model.fit(bands, **args)
@@ -2167,14 +2168,17 @@ class sn(object):
         # Setup initial Robs (in case it is used by the model)
         for band in bands:
             if band not in self.Robs:
+                if not self.quiet:
+                    print(f'{band} not in self.Robs')
                 self.Robs[band] = fset[band].R(
                     self.Rv_gal,
                     Ia_w,
                     Ia_f,
                     z=self.z,
                     redlaw=self.redlaw,
-                    strict_ccm=strict_ccm,
                 )
+                if not self.quiet:
+                    print(f'self.Robs[{band}] = set to {self.Robs[band]}.')
 
         # if self.z <= 0:
         #   raise ValueError("The heliocentric redshift is zero.  Fix this before you fit")
@@ -2194,29 +2198,54 @@ class sn(object):
             self.ks_tck = {}
         if not self.quiet:
             print("Doing Initial Fit to get Tmax...")
+            print('Params are')
+            print(self.model.parameters)
         self.model.fit(bands, **args)
+        if not self.quiet:
+            print("And now they are")
+            print(self.model.parameters)
 
         if dokcorr:
             kbands = [band for band in bands if band not in self.ks]
             if len(kbands) > 0:
                 if not self.quiet:
                     print("Setting up initial k-corrections")
+                    print("self.Robs is")
+                    print(self.Robs)
                 self.kcorr(kbands, mangle=0, use_stretch=k_stretch)
+                if not self.quiet:
+                    print('And now it is')
+                    print(self.Robs)
 
             if not self.quiet:
                 if mangle:
                     print("Doing first fit...")
                 else:
                     print("Doing fit...")
+                print('Params are')
+                print(self.model.parameters)
             self.model.fit(bands, **args)
+            if not self.quiet:
+                print("And now they are")
+                print(self.model.parameters)
 
             if mangle:
                 if not self.quiet:
                     print("Doing mangled k-corrections")
+                    print("self.Robs is")
+                    print(self.Robs)
                 self.kcorr(bands, interp=0, use_model=1, use_stretch=k_stretch, **margs)
                 if not self.quiet:
+                    print('And now it is')
+                    print(self.Robs)
+                if not self.quiet:
                     print("Doing final fit...")
+                    print('Params are')
+                    print(self.model.parameters)
                 self.model.fit(bands, **args)
+                if not self.quiet:
+                    print("And now they are")
+                    print(self.model.parameters)
         if self.replot:
             self.plot()
 
@@ -2230,7 +2259,6 @@ class sn(object):
         tracefile=None,
         verbose=False,
         plot_triangle=False,
-        strict_ccm=False,
         **args
     ):
         """Fit the N light curves of filters specified in [bands]

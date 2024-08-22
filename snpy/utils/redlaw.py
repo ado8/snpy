@@ -1,4 +1,4 @@
-'''A module to compute the reddening law based on specified filters.
+"""A module to compute the reddening law based on specified filters.
 
 The basic problem is that we observe in a particular filter and are
 correcting by the color in two other filters.  So, we want to make
@@ -12,79 +12,82 @@ the following correction:
    to compute R and also take this value of R and convert back to 
    the CCM R_V parameter.
 
-'''
+"""
 
-import six
-from snpy.filters import fset
-from snpy import kcorr
-from . import deredden
-import numpy as np
-import scipy
 import os
 import pickle
 
-base = os.path.dirname(__file__)
-if os.path.isfile(os.path.join(base,'Ia_R_splines.pickle')):
-   f = open(os.path.join(base,'Ia_R_splines.pickle'), 'rb')
-   if six.PY3:
-      Bspls = pickle.load(f, encoding='iso-8859-1')
-   else:
-      Bspls = pickle.load(f)
-   f.close()
+import numpy as np
+import scipy
+import six
+from snpy import kcorr
+from snpy.filters import fset
 
-def R_lambda(f, Rv, EBV, redlaw='ccm'):
-   '''A fast implementation based on bivariate splines.'''
-   scalar = (len(np.shape(Rv)) == 0 and len(np.shape(EBV)) == 0)
-   Rv = np.atleast_1d(Rv)
-   EBV = np.atleast_1d(EBV)
-   #res = np.diag(Bspls[redlaw][f](Rv,EBV))
-   res = Bspls[redlaw][f].ev(Rv,EBV)
-   if scalar:
-      return res[0]
-   else:
-      return res
-   
-def Rv_to_R(f1, f2, f3, Rv, EBV=0.01, day=0, redlaw='ccm',
-      strict_ccm=0, version='H3'):
-   '''Convert from R_V and optionally EBV to an observed R through
+from . import deredden
+
+base = os.path.dirname(__file__)
+if os.path.isfile(os.path.join(base, "Ia_R_splines.pickle")):
+    f = open(os.path.join(base, "Ia_R_splines.pickle"), "rb")
+    if six.PY3:
+        Bspls = pickle.load(f, encoding="iso-8859-1")
+    else:
+        Bspls = pickle.load(f)
+    f.close()
+
+
+def R_lambda(f, Rv, EBV, redlaw="ccm"):
+    """A fast implementation based on bivariate splines."""
+    scalar = len(np.shape(Rv)) == 0 and len(np.shape(EBV)) == 0
+    Rv = np.atleast_1d(Rv)
+    EBV = np.atleast_1d(EBV)
+    # res = np.diag(Bspls[redlaw][f](Rv,EBV))
+    res = Bspls[redlaw][f].ev(Rv, EBV)
+    if scalar:
+        return res[0]
+    else:
+        return res
+
+
+def Rv_to_R(f1, f2, f3, Rv, EBV=0.01, day=0, redlaw="O94", version="H3"):
+    """Convert from R_V and optionally EBV to an observed R through
    filter f1, corrected by f2-f3 color.  You can choose which day
    the SN SED should be (default day 0, max).  You can also specify
    which reddening law to use:  redlaw='ccm' for Cardelli et al., or
-   redlaw='fm' for Fitzpatric and Malla (1999), If redlaw='ccm', you 
+   redlaw='fm' for Fitzpatrick and Massa (1999), If redlaw='ccm', you 
    can specify whether we should use the strict CCM relation (default no).
    Finally, you an choose which SED sequence to use:  'H', 'H3', or '91bg'
-   (default H3).'''
+   (default H3)."""
 
-   # get the SNIa SED
-   wave,flux = kcorr.get_SED(day, version=version)
-   # Redden according to CCM (plus improvements if strict_ccm=0)
-   rflux,a,b = deredden.unred(wave, flux, -EBV, Rv, redlaw=redlaw,
-         strict_ccm=strict_ccm)
-   
-   # compute synthetic magnitudes of original and reddened filter
-   m1 = fset[f1].synth_mag(wave, flux)
-   m1_red = fset[f1].synth_mag(wave, rflux)
-   m2 = fset[f2].synth_mag(wave, flux)
-   m2_red = fset[f2].synth_mag(wave, rflux)
-   m3 = fset[f3].synth_mag(wave, flux)
-   m3_red = fset[f3].synth_mag(wave, rflux)
+    # get the SNIa SED
+    wave, flux = kcorr.get_SED(day, version=version)
+    # Redden according to CCM (plus improvements if strict_ccm=0)
+    rflux, a, redlaw_mask = deredden.unred(wave, flux, -EBV, Rv, redlaw=redlaw)
+    wave = wave[redlaw_mask]
+    flux = flux[redlaw_mask]
 
-   # Compute extinctions
-   A1 = m1 - m1_red;   A2 = m2 - m2_red;  A3 = m3 - m3_red
+    # compute synthetic magnitudes of original and reddened filter
+    m1 = fset[f1].synth_mag(wave, flux)
+    m1_red = fset[f1].synth_mag(wave, rflux)
+    m2 = fset[f2].synth_mag(wave, flux)
+    m2_red = fset[f2].synth_mag(wave, rflux)
+    m3 = fset[f3].synth_mag(wave, flux)
+    m3_red = fset[f3].synth_mag(wave, rflux)
 
-   # Return reddening law R
-   return(A1/(A2 - A3))
+    # Compute extinctions
+    A1 = m1 - m1_red
+    A2 = m2 - m2_red
+    A3 = m3 - m3_red
+
+    # Return reddening law R
+    return A1 / (A2 - A3)
 
 
-def R_to_Rv(f1, f2, f3, R, EBV=0.01, day=0, redlaw='ccm', strict_ccm=0, 
-      version='H3'):
-    '''Same as Rv_toR, but work in reverse to find Rv, given R'''
+def R_to_Rv(f1, f2, f3, R, EBV=0.01, day=0, redlaw="ccm", version="H3"):
+    """Same as Rv_toR, but work in reverse to find Rv, given R"""
 
     # A temporary function for which we want to find the zero
-    f = lambda x:  Rv_to_R(f1, f2, f3, x, EBV, day, redlaw, strict_ccm, 
-          version)-R
+    f = lambda x: Rv_to_R(f1, f2, f3, x, EBV, day, redlaw, version) - R
 
     # Use Brent's method to find the zero of the function:  Rv
     result = scipy.optimize.brentq(f, 0.01, 10.0)
-    return(result)
-
+    return result
