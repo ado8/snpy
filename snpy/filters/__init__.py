@@ -765,6 +765,8 @@ for obs in obsdirs:
                 # We have a std=mag format
                 std, mag = [item.strip() for item in l[2].split("=")]
                 # std,mag = list(map(string.strip, l[2].split('=')))
+                if std == 'vega':
+                    std = 'VegaB'
                 if std in standards:
                     try:
                         m = float(mag)
