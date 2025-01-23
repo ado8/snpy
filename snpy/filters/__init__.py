@@ -28,6 +28,7 @@ from glob import glob
 import numpy as num
 import scipy.integrate
 import scipy.interpolate
+
 # from astropy import units as u
 from astropy.constants import c, h
 from snpy.utils.deredden import get_dust_ext_model, unred
@@ -48,19 +49,19 @@ ch = ch.to("erg Angstrom").value
 
 
 class spectrum:
-    """This class defines a spectrum.  It contains the response as Numeric 
-   arrays.  It has the following member data:
-      name:      string describing the filter (eg. 'B')
-      file:      where to find the filter response
-      wave:      Numeric array of wavelengths (Angstroms)
-      resp:      Numeric array of response
-      min:       minimum wavelength defined
-      max:       maximum wavelength defined
-      comment:   They're useful, you know!
-    
-    There are also some useful functions:
-      read():                   Read in the data and compute member data
-   """
+    """This class defines a spectrum.  It contains the response as Numeric
+    arrays.  It has the following member data:
+       name:      string describing the filter (eg. 'B')
+       file:      where to find the filter response
+       wave:      Numeric array of wavelengths (Angstroms)
+       resp:      Numeric array of response
+       min:       minimum wavelength defined
+       max:       maximum wavelength defined
+       comment:   They're useful, you know!
+
+     There are also some useful functions:
+       read():                   Read in the data and compute member data
+    """
 
     def __init__(
         self,
@@ -72,9 +73,9 @@ class spectrum:
         fluxed=True,
         load=1,
     ):
-        """Creates a spectrum instance.  Required parameters:  name and file.  
-      Can also specify the zero point (instead of using the comptute_zpt() 
-      function do do it)."""
+        """Creates a spectrum instance.  Required parameters:  name and file.
+        Can also specify the zero point (instead of using the comptute_zpt()
+        function do do it)."""
         self.name = name
         self.file = filename  # location of the filter response
         self.wave_data = wave  # wavelength of response
@@ -136,32 +137,32 @@ class spectrum:
 
 class filter(spectrum):
     """This class defines a filter.  It contains the response as Numeric arrays.  It has
-   the following member data:
-      name:      string describing the filter (eg. 'B')
-      file:      where to find the filter response
-      zp:        the photometric zero point (in vega only for now)
-      wave:      Numeric array of wavelengths (Angstroms)
-      resp:      Numeric array of response
-      ave_wave:  The effective wavelength for a flat spectrum
-      min:       minimum wavelength defined
-      max:       maximum wavelength defined
-      comment:   They're useful, you know!
-    
-    There are also some useful functions:
-      read():                   Read in the data and compute member data
-      compute_zpt(spec, mag):   Compute zero point based on spectrum instance spec
-                                and standard magnitude mag.
-      response(wave, flux):     Compute the convolution with spectrum given by
-                                wave,flux
-      eff_wave(wave, flux):     Compute the effective wavelength given a spectrum
-      synth_mag(wave, flux):    Compute a synthetic magnitude, given a spectrum.
-      R(Rv, z=0): Compute the filters' Reddening coefficient for 
-                                assumed value of Rv and redshift z."""
+    the following member data:
+       name:      string describing the filter (eg. 'B')
+       file:      where to find the filter response
+       zp:        the photometric zero point (in vega only for now)
+       wave:      Numeric array of wavelengths (Angstroms)
+       resp:      Numeric array of response
+       ave_wave:  The effective wavelength for a flat spectrum
+       min:       minimum wavelength defined
+       max:       maximum wavelength defined
+       comment:   They're useful, you know!
+
+     There are also some useful functions:
+       read():                   Read in the data and compute member data
+       compute_zpt(spec, mag):   Compute zero point based on spectrum instance spec
+                                 and standard magnitude mag.
+       response(wave, flux):     Compute the convolution with spectrum given by
+                                 wave,flux
+       eff_wave(wave, flux):     Compute the effective wavelength given a spectrum
+       synth_mag(wave, flux):    Compute a synthetic magnitude, given a spectrum.
+       R(Rv, z=0): Compute the filters' Reddening coefficient for
+                                 assumed value of Rv and redshift z."""
 
     def __init__(self, name, file=None, zp=None, comment=None):
-        """Creates a filter instance.  Required parameters:  name and file.  Can 
-      also specify the zero point (instead of using the comptute_zpt() 
-      function do do it)."""
+        """Creates a filter instance.  Required parameters:  name and file.  Can
+        also specify the zero point (instead of using the comptute_zpt()
+        function do do it)."""
         spectrum.__init__(self, name, file)
         self.zp = zp
         self.comment = comment
@@ -175,8 +176,8 @@ class filter(spectrum):
 
     def compute_zpt(self, spectrum, mag, zeropad=0):
         """Compute the photometric zero point.  If spectrum is a list of spectra, then
-      a zero point is computed for each and returned as a Numeric array (which you
-      can then average, median, whatever."""
+        a zero point is computed for each and returned as a Numeric array (which you
+        can then average, median, whatever."""
         # get the response if needed:
         if self.wave is None:
             self.read()
@@ -226,16 +227,16 @@ class filter(spectrum):
 
     def response(self, specwave, flux=None, z=0, zeropad=0, photons=1):
         """Get the response of this filter over the specified spectrum.  This
-      spectrum can be defined as a spectrum instance, in which case you simply
-      need to specify [specwave]  Or, you can specify a wavelength
-      and flux vector, in which case, you need to specify both [specwave] (which
-      is now taken to be the wavelength vector) and the flux as [flux].  If z is
-      supplied, first redshift the spectrum by this amount.  If zeropad is true,
-      then the spectrum is assumed to be zero where the filter extends beyond
-      its definition, otherwise -1 is returned if the filter extends beyond the
-      spectrum's definition.  If photons=1, the integrand is multiplied by the
-      wavelength vector and divided by c*h, i.e., the photon flux is
-      computed.."""
+        spectrum can be defined as a spectrum instance, in which case you simply
+        need to specify [specwave]  Or, you can specify a wavelength
+        and flux vector, in which case, you need to specify both [specwave] (which
+        is now taken to be the wavelength vector) and the flux as [flux].  If z is
+        supplied, first redshift the spectrum by this amount.  If zeropad is true,
+        then the spectrum is assumed to be zero where the filter extends beyond
+        its definition, otherwise -1 is returned if the filter extends beyond the
+        spectrum's definition.  If photons=1, the integrand is multiplied by the
+        wavelength vector and divided by c*h, i.e., the photon flux is
+        computed.."""
 
         # Handle the intput parameters
         if flux is None:
@@ -323,7 +324,7 @@ class filter(spectrum):
 
     def ABoff(self):
         """Compute the AB offset for this filter. Due to the way SNooPy stores
-      the zero-points, this only depends on filter function shape."""
+        the zero-points, this only depends on filter function shape."""
         return (
             65.4469
             - 48.6
@@ -333,8 +334,8 @@ class filter(spectrum):
 
     def synth_mag(self, specwave, flux=None, z=0, zeropad=0):
         """Compute the synthetic magnitude based on the input spectrum defined by
-      (specwave) or (specwave,flux).  If z is supplied, first redshift the 
-      input spectrum by this amount."""
+        (specwave) or (specwave,flux).  If z is supplied, first redshift the
+        input spectrum by this amount."""
 
         # First check to make sure the spectrum is fluxed
         if isinstance(specwave, spectrum):
@@ -348,8 +349,8 @@ class filter(spectrum):
 
     def synth_abmag(self, specwave, flux=None, z=0, zeropad=0):
         """Compute the synthetic AB magnitude of the input spectrum defined by
-      (specwave) or (specwave, flux).  If z is supplied, first blueshift
-      the filter by this amount (ie, you are observing a redshifed spectrum)."""
+        (specwave) or (specwave, flux).  If z is supplied, first blueshift
+        the filter by this amount (ie, you are observing a redshifed spectrum)."""
 
         # First check to make sure the spectrum is fluxed
         if isinstance(specwave, spectrum):
@@ -408,8 +409,8 @@ class filter(spectrum):
 
     def eff_wave(self, specwave, flux=None, z=0, zeropad=0):
         """Compute the effective wavelength for this filter, given the
-      spectrum defined by (specwave) or (specwave, flux).  If z is 
-      non-zero, first redfhift the spectrum by this amount."""
+        spectrum defined by (specwave) or (specwave, flux).  If z is
+        non-zero, first redfhift the spectrum by this amount."""
         if not isinstance(specwave, spectrum):
             s_wave = specwave
             s_flux = flux
@@ -430,16 +431,22 @@ class filter(spectrum):
         return filter(self.name, self.file, self.zp, self.comment)
 
     def R(
-        self, Rv=3.1, wave=None, flux=None, z=0.0, EBV=0.001, redlaw="O94",
+        self,
+        Rv=3.1,
+        wave=None,
+        flux=None,
+        z=0.0,
+        EBV=0.001,
+        redlaw="O94",
     ):
         """For a given reddening law Rv (default 3.1), find the ratio of total
-      to selective absorption for this filter:  R = A/E(B-V).  You can 
-      specify a specific spectrum by supplying a wave and flux and redshift
-      (default is defined by filters.reference_wave and 
-      filters.reference_flux at z=0).  You can also specify E(B-V) (EBV) which can
-      change the value of R if the spectrum is significantly non-stellar. You
-      can specify redlaw='fm' if you prefer a Fitzpatrick (1999) reddening 
-      law."""
+        to selective absorption for this filter:  R = A/E(B-V).  You can
+        specify a specific spectrum by supplying a wave and flux and redshift
+        (default is defined by filters.reference_wave and
+        filters.reference_flux at z=0).  You can also specify E(B-V) (EBV) which can
+        change the value of R if the spectrum is significantly non-stellar. You
+        can specify redlaw='fm' if you prefer a Fitzpatrick (1999) reddening
+        law."""
         global standards
 
         if wave is None:
@@ -507,11 +514,11 @@ class system:
 
 class standard_set:
     """An object that will contain all the standard SEDs.  The
-   standard set contains a dictionary of system objects.  Each
-   system object contains a dictionary of spectrum objects.
-   So standards.Vega.Bohlin04  would refer to the Bohlin & Gllliand
-   2004 SED.  You can also refer to the spectrum with a unique ID 
-   as, e.g., standards['VegaB']."""
+    standard set contains a dictionary of system objects.  Each
+    system object contains a dictionary of spectrum objects.
+    So standards.Vega.Bohlin04  would refer to the Bohlin & Gllliand
+    2004 SED.  You can also refer to the spectrum with a unique ID
+    as, e.g., standards['VegaB']."""
 
     def __init__(self):
         self.systems = {}
@@ -564,12 +571,12 @@ class standard_set:
 
 class filter_set:
     """An object that will contain all the filter instances.  The
-   filter set contains a dictionary of observatory objects.  Each
-   observatory object contains a dictionary of telescope objects.
-   And each telescope object contains a dictionary of filter
-   objects.  So filters.LCO.Swope.B  would refer to the B filter
-   on the Swope telescope at the LCO observatory.  You can also
-   refer to a filter with a unique ID as, e.g., filters['Bswo']."""
+    filter set contains a dictionary of observatory objects.  Each
+    observatory object contains a dictionary of telescope objects.
+    And each telescope object contains a dictionary of filter
+    objects.  So filters.LCO.Swope.B  would refer to the B filter
+    on the Swope telescope at the LCO observatory.  You can also
+    refer to a filter with a unique ID as, e.g., filters['Bswo']."""
 
     def __init__(self):
         self.observatories = {}
@@ -628,7 +635,7 @@ class filter_set:
 
 class observatory:
     """An object that contains telescope objects.  We could also
-   add other info like Lat, long, altitude, etc..."""
+    add other info like Lat, long, altitude, etc..."""
 
     def __init__(self, name):
         self.name = name
@@ -664,7 +671,7 @@ class observatory:
 
 class telescope:
     """An object that contains filter objects.  It is a child to
-   the observatory class, which is a child to the filter_set."""
+    the observatory class, which is a child to the filter_set."""
 
     def __init__(self, name):
         self.name = name
@@ -765,8 +772,8 @@ for obs in obsdirs:
                 # We have a std=mag format
                 std, mag = [item.strip() for item in l[2].split("=")]
                 # std,mag = list(map(string.strip, l[2].split('=')))
-                if std == 'vega':
-                    std = 'VegaB'
+                if std == "vega":
+                    std = "VegaB"
                 if std in standards:
                     try:
                         m = float(mag)
@@ -787,6 +794,8 @@ for obs in obsdirs:
                 # zero-point is derived from the filter function alone. See
                 # documentation.
                 newf = filter(l[0], os.path.join(dir, l[1]), 0.0, " ".join(l[3:]))
+                if not scipy.integrate.trapz(newf.resp / newf.wave, x=newf.wave) > 0:
+                    print(l)
                 newf.zp = 16.84692 + 2.5 * num.log10(
                     scipy.integrate.trapz(newf.resp / newf.wave, x=newf.wave)
                 )

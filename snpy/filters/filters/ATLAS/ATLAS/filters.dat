@@ -1,2 +1,6 @@
-ATgr filter1            AB       ATLAS g+r
-ATri filter2            AB       ATLAS r+i
+atlas_c ATgr_total.dat            AB       ATLAS g+r
+atlas_o ATri_total.dat            AB       ATLAS r+i
+ATgr ATgr_total.dat            AB       ATLAS g+r
+ATri ATri_total.dat            AB       ATLAS r+i
+ATgr_old filter1            AB       ATLAS g+r
+ATri_old filter2            AB       ATLAS r+i
